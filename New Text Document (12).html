@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>১ থেকে ৩০ দিনের খরচ ক্যালকুলেটর</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); overflow-x: auto; }
+        h1 { text-align: center; color: #2c3e50; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #3498db; color: white; }
+        input { width: 90%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; }
+        .total { font-weight: bold; background-color: #ecf0f1; }
+        .savings { font-size: 18px; padding: 15px; text-align: center; margin: 20px 0; border-radius: 8px; }
+        .positive { background-color: #d5f4e6; color: #27ae60; }
+        .negative { background-color: #fadbd8; color: #c0392b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>১ থেকে ৩০ দিনের দৈনিক খরচ ক্যালকুলেটর</h1>
+        
+        <table>
+            <tr>
+                <td><strong>মাসিক আয় (টাকা)</strong></td>
+                <td><input type="number" id="income" value="50000" oninput="calculate()"></td>
+            </tr>
+        </table>
+
+        <table id="daily">
+            <thead>
+                <tr>
+                    <th>দিন</th>
+                    <th>খরচ (টাকা)</th>
+                    <th>দিন</th>
+                    <th>খরচ (টাকা)</th>
+                    <th>দিন</th>
+                    <th>খরচ (টাকা)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ৩০ দিনের রো তৈরি হবে জাভাস্ক্রিপ্ট দিয়ে -->
+            </tbody>
+        </table>
+
+        <table class="total">
+            <tr>
+                <td><strong>মোট খরচ (৩০ দিন)</strong></td>
+                <td id="totalExpense">0 টাকা</td>
+            </tr>
+            <tr>
+                <td><strong>বাকি টাকা (সেভিংস)</strong></td>
+                <td id="savings">0 টাকা</td>
+            </tr>
+        </table>
+
+        <div id="result" class="savings">খরচ লিখে দেখুন মোট হিসাব!</div>
+    </div>
+
+    <script>
+        // ৩০ দিনের টেবিল রো তৈরি করা
+        const tbody = document.querySelector('#daily tbody');
+        for (let i = 1; i <= 30; i += 3) {
+            const tr = document.createElement('tr');
+            for (let j = 0; j < 3 && (i + j) <= 30; j++) {
+                const day = i + j;
+                tr.innerHTML += `
+                    <td>দিন ${day}</td>
+                    <td><input type="number" value="0" class="day-input" data-day="${day}" oninput="calculate()"></td>
+                `;
+            }
+            tbody.appendChild(tr);
+        }
+
+        function calculate() {
+            let income = parseFloat(document.getElementById('income').value) || 0;
+            let inputs = document.querySelectorAll('.day-input');
+            let totalExpense = 0;
+
+            inputs.forEach(input => {
+                totalExpense += parseFloat(input.value) || 0;
+            });
+
+            let savings = income - totalExpense;
+
+            document.getElementById('totalExpense').textContent = totalExpense.toLocaleString() + " টাকা";
+            document.getElementById('savings').textContent = savings.toLocaleString() + " টাকা";
+
+            let resultDiv = document.getElementById('result');
+            if (savings > 0) {
+                resultDiv.textContent = "অভিনন্দন! ৩০ দিনে " + savings.toLocaleString() + " টাকা সেভ করতে পারবেন।";
+                resultDiv.className = "savings positive";
+            } else if (savings < 0) {
+                resultDiv.textContent = "সাবধান! ৩০ দিনে " + Math.abs(savings).toLocaleString() + " টাকা ঘাটতি হবে।";
+                resultDiv.className = "savings negative";
+            } else {
+                resultDiv.textContent = "পারফেক্ট ব্যালেন্স! কোনো ঘাটতি বা বাকি নেই।";
+                resultDiv.className = "savings";
+            }
+        }
+
+        // প্রথমে হিসাব করা
+        calculate();
+    </script>
+</body>
+</html>
