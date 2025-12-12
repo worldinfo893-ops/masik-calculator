@@ -1,0 +1,251 @@
+import React, { useState, useEffect } from 'react';
+import { Calendar, TrendingDown, DollarSign, Trash2, Edit2, Check, X } from 'lucide-react';
+
+export default function MonthlyExpenseCalculator() {
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [dailyExpenses, setDailyExpenses] = useState({});
+  const [editingDay, setEditingDay] = useState(null);
+  const [tempExpense, setTempExpense] = useState('');
+  const [budget, setBudget] = useState(30000);
+  const [showBudgetEdit, setShowBudgetEdit] = useState(false);
+  const [tempBudget, setTempBudget] = useState(30000);
+
+  const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+  
+  const getDaysInMonth = (month, year) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const daysInMonth = getDaysInMonth(currentMonth, currentYear);
+
+  const handleExpenseChange = (day, value) => {
+    const amount = parseFloat(value) || 0;
+    setDailyExpenses({
+      ...dailyExpenses,
+      [`${currentYear}-${currentMonth}-${day}`]: amount
+    });
+    setEditingDay(null);
+    setTempExpense('');
+  };
+
+  const deleteExpense = (day) => {
+    const newExpenses = { ...dailyExpenses };
+    delete newExpenses[`${currentYear}-${currentMonth}-${day}`];
+    setDailyExpenses(newExpenses);
+  };
+
+  const totalExpense = Object.keys(dailyExpenses)
+    .filter(key => key.startsWith(`${currentYear}-${currentMonth}`))
+    .reduce((sum, key) => sum + (dailyExpenses[key] || 0), 0);
+
+  const averagePerDay = totalExpense / daysInMonth;
+  const remaining = budget - totalExpense;
+  const daysWithExpense = Object.keys(dailyExpenses)
+    .filter(key => key.startsWith(`${currentYear}-${currentMonth}`) && dailyExpenses[key] > 0)
+    .length;
+
+  const startEdit = (day) => {
+    setEditingDay(day);
+    setTempExpense(dailyExpenses[`${currentYear}-${currentMonth}-${day}`] || '');
+  };
+
+  const saveBudget = () => {
+    setBudget(parseFloat(tempBudget) || 30000);
+    setShowBudgetEdit(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-white rounded-2xl shadow-2xl p-6 mb-6">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Calendar className="w-10 h-10 text-indigo-600" />
+            <h1 className="text-4xl font-bold text-indigo-600">৩০ দিনের খরচ হিসাব</h1>
+          </div>
+
+          {/* Month Selector */}
+          <div className="flex justify-center gap-3 mb-6">
+            <select
+              value={currentMonth}
+              onChange={(e) => setCurrentMonth(parseInt(e.target.value))}
+              className="px-4 py-2 border-2 border-indigo-300 rounded-lg font-semibold text-gray-700 focus:ring-2 focus:ring-indigo-500"
+            >
+              {months.map((month, idx) => (
+                <option key={idx} value={idx}>{month}</option>
+              ))}
+            </select>
+            <select
+              value={currentYear}
+              onChange={(e) => setCurrentYear(parseInt(e.target.value))}
+              className="px-4 py-2 border-2 border-indigo-300 rounded-lg font-semibold text-gray-700 focus:ring-2 focus:ring-indigo-500"
+            >
+              {[2023, 2024, 2025, 2026].map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-5 text-white shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm opacity-90">মাসিক বাজেট</span>
+                {!showBudgetEdit && (
+                  <button onClick={() => { setShowBudgetEdit(true); setTempBudget(budget); }}>
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              {showBudgetEdit ? (
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={tempBudget}
+                    onChange={(e) => setTempBudget(e.target.value)}
+                    className="w-full px-2 py-1 rounded text-gray-800 text-lg font-bold"
+                  />
+                  <button onClick={saveBudget} className="bg-green-500 p-1 rounded">
+                    <Check className="w-5 h-5" />
+                  </button>
+                  <button onClick={() => setShowBudgetEdit(false)} className="bg-red-500 p-1 rounded">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <p className="text-3xl font-bold">৳ {budget.toLocaleString('bn-BD')}</p>
+              )}
+            </div>
+
+            <div className="bg-gradient-to-br from-red-500 to-red-700 rounded-xl p-5 text-white shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm opacity-90">মোট খরচ</span>
+                <TrendingDown className="w-5 h-5" />
+              </div>
+              <p className="text-3xl font-bold">৳ {totalExpense.toLocaleString('bn-BD')}</p>
+              <p className="text-xs mt-1 opacity-80">{daysWithExpense} দিনে খরচ হয়েছে</p>
+            </div>
+
+            <div className={`bg-gradient-to-br ${remaining >= 0 ? 'from-green-500 to-green-700' : 'from-orange-500 to-orange-700'} rounded-xl p-5 text-white shadow-lg`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm opacity-90">বাকি আছে</span>
+                <DollarSign className="w-5 h-5" />
+              </div>
+              <p className="text-3xl font-bold">৳ {remaining.toLocaleString('bn-BD')}</p>
+              <p className="text-xs mt-1 opacity-80">
+                {remaining >= 0 ? 'বাজেটের মধ্যে আছেন' : 'বাজেট অতিক্রম করেছেন!'}
+              </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl p-5 text-white shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm opacity-90">দৈনিক গড়</span>
+                <Calendar className="w-5 h-5" />
+              </div>
+              <p className="text-3xl font-bold">৳ {averagePerDay.toFixed(0)}</p>
+              <p className="text-xs mt-1 opacity-80">প্রতিদিন গড় খরচ</p>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mb-6">
+            <div className="flex justify-between text-sm text-gray-600 mb-2">
+              <span>বাজেটের ব্যবহার</span>
+              <span>{((totalExpense / budget) * 100).toFixed(1)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 ${
+                  totalExpense / budget > 1 ? 'bg-red-500' : totalExpense / budget > 0.8 ? 'bg-orange-500' : 'bg-green-500'
+                }`}
+                style={{ width: `${Math.min((totalExpense / budget) * 100, 100)}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Daily Expense Table */}
+          <div className="bg-gray-50 rounded-xl p-4">
+            <h3 className="font-bold text-xl text-gray-800 mb-4">দৈনিক খরচের তালিকা</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+              {[...Array(daysInMonth)].map((_, index) => {
+                const day = index + 1;
+                const key = `${currentYear}-${currentMonth}-${day}`;
+                const expense = dailyExpenses[key] || 0;
+                const isEditing = editingDay === day;
+
+                return (
+                  <div
+                    key={day}
+                    className={`p-4 rounded-lg border-2 transition ${
+                      expense > 0 ? 'bg-white border-indigo-300' : 'bg-gray-100 border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-gray-700">{day} তারিখ</span>
+                      {expense > 0 && !isEditing && (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => startEdit(day)}
+                            className="text-blue-500 hover:text-blue-700 p-1"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => deleteExpense(day)}
+                            className="text-red-500 hover:text-red-700 p-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {isEditing ? (
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          value={tempExpense}
+                          onChange={(e) => setTempExpense(e.target.value)}
+                          placeholder="৳ 0"
+                          className="w-full px-3 py-2 border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                          autoFocus
+                          onKeyPress={(e) => e.key === 'Enter' && handleExpenseChange(day, tempExpense)}
+                        />
+                        <button
+                          onClick={() => handleExpenseChange(day, tempExpense)}
+                          className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg"
+                        >
+                          <Check className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => { setEditingDay(null); setTempExpense(''); }}
+                          className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-2 rounded-lg"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => expense === 0 && startEdit(day)}
+                        className={`cursor-pointer ${expense === 0 ? 'hover:bg-gray-200' : ''} rounded p-2`}
+                      >
+                        {expense > 0 ? (
+                          <p className="text-2xl font-bold text-indigo-600">
+                            ৳ {expense.toLocaleString('bn-BD')}
+                          </p>
+                        ) : (
+                          <p className="text-gray-400 text-center text-sm">+ খরচ যোগ করুন</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
